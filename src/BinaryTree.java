@@ -1,10 +1,12 @@
 import NewNodeTree.NodeTree;
 import java.util.Scanner;
+
 public class BinaryTree {
     private final NodeTree<Character> tree = new NodeTree<>();
 
     public BinaryTree() {
-        tree.firstTree(null, 'E', 'R');
+        // (minimal cleanup) no more firstTree() here; build via UI or buildStandardMorse()
+        // tree.firstTree(null, 'E', 'R');
     }
 
     public String getUserInput(){
@@ -12,40 +14,22 @@ public class BinaryTree {
         return input.nextLine();
     }
 
-    public String[] getDotDash()
-    {
+    public String[] getDotDash() {
         String myString = getUserInput();
         String[] dotsAndDash = new String[myString.length()];
         for (int i = 0; i < myString.length(); i++) {
             char character = myString.charAt(i);
             dotsAndDash[i] = String.valueOf(character);
         }
-
         return dotsAndDash;
     }
 
-
     public void treeMovement() {
         System.out.print("Enter code (.-): ");
-        String[] dotDashArray = getDotDash();
-
-        NodeTree.TreeNode<Character> cur = tree.getRoot();
-        if (cur == null) cur = tree.setRoot(null); // make sure we have a root
-
-        for (int i = 0; i < dotDashArray.length; i++) {
-            String step = dotDashArray[i];
-            if (".".equals(step)) {
-                NodeTree.TreeNode<Character> left = tree.getLeft(cur);
-                if (left == null) left = tree.setLeft(null, cur);
-                cur = left;
-            } else if ("-".equals(step)) {
-                NodeTree.TreeNode<Character> right = tree.getRight(cur);
-                if (right == null) right = tree.setRight(null, cur);
-                cur = right;
-            } else {
-                System.out.println("Invalid char: " + step + " (use '.' or '-')");
-                return;
-            }
+        String code = getUserInput().trim();
+        if (!validateMorse(code)) {
+            System.out.println("Invalid code; only '.' and '-' allowed.");
+            return;
         }
 
         System.out.print("Enter letter to assign here: ");
@@ -55,9 +39,11 @@ public class BinaryTree {
             return;
         }
         char letter = Character.toUpperCase(s.charAt(0));
-        tree.setNodeValue(cur, letter);
-        System.out.println("OK: stored '" + letter + "' at this path.");
+
+        tree.insertByCode(letter, code);  // ← single call does the recursive work
+        System.out.println("OK: stored '" + letter + "' at " + code);
     }
+
     // TEXT -> MORSE
     public String encodeLine(String text) {
         if (text == null) return "";
@@ -99,6 +85,7 @@ public class BinaryTree {
 
         return out.toString();
     }
+
     // MORSE -> TEXT
     public String decodeLine(String morse) {
         if (morse == null) return "";
@@ -154,7 +141,6 @@ public class BinaryTree {
 
     // Build standard ITU Morse: A–Z and 0–9
     public void buildStandardMorse() {
-        // Ensure base root exists
         if (tree.getRoot() == null) tree.setRoot(null);
 
         // Letters
@@ -185,9 +171,13 @@ public class BinaryTree {
         return tree.clearValueByCode(code);
     }
 
-
-
-
-
-
+    // ---- tiny helper used by treeMovement() ----
+    private boolean validateMorse(String s) {
+        if (s == null || s.isEmpty()) return false;
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch != '.' && ch != '-') return false;
+        }
+        return true;
+    }
 }
